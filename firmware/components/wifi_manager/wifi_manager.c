@@ -10,6 +10,8 @@
 #include "esp_netif.h"
 #include "esp_wifi.h"
 
+#include "storage.h"
+
 #define WIFI_CONNECTED_BIT BIT0
 
 static const char *TAG = "WIFI_MANAGER";
@@ -81,6 +83,47 @@ static void wifi_event_handler(
     }
 }
 
+// Kredencijali se citaju iz NVS-a. Vrednosti iz menuconfig-a sluze samo
+// za prvi upis (ili za prepisivanje kada je ukljuceno OVERWRITE_NVS).
+static esp_err_t load_credentials(wifi_credentials_t *creds)
+{
+    esp_err_t err = storage_get_wifi(creds);
+    bool have_kconfig = strlen(CONFIG_WIFI_MANAGER_SSID) > 0;
+    bool overwrite = false;
+
+#ifdef CONFIG_WIFI_MANAGER_OVERWRITE_NVS
+    overwrite = true;
+#endif
+
+    if (have_kconfig && (err != ESP_OK || overwrite))
+    {
+        ESP_LOGI(TAG, "Upisujem WiFi kredencijale iz menuconfig-a u NVS");
+
+        esp_err_t set_err = storage_set_wifi(
+            CONFIG_WIFI_MANAGER_SSID,
+            CONFIG_WIFI_MANAGER_PASSWORD);
+
+        if (set_err != ESP_OK)
+        {
+            ESP_LOGE(TAG, "Upis u NVS nije uspeo: %s", esp_err_to_name(set_err));
+            return set_err;
+        }
+
+        err = storage_get_wifi(creds);
+    }
+
+    if (err != ESP_OK)
+    {
+        ESP_LOGE(TAG, "Nema WiFi kredencijala u NVS-u. Podesite ih u menuconfig-u "
+                      "(Wi-Fi Manager Configuration) i ponovo flesujte.");
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    ESP_LOGI(TAG, "WiFi kredencijali procitani iz NVS-a (SSID: %s)", creds->ssid);
+
+    return ESP_OK;
+}
+
 esp_err_t wifi_manager_init(void)
 {
     if (initialized)
@@ -147,38 +190,24 @@ esp_err_t wifi_manager_init(void)
         return err;
     }
 
+    wifi_credentials_t creds;
+
+    err = load_credentials(&creds);
+
+    if (err != ESP_OK)
+    {
+        return err;
+    }
+
     wifi_config_t sta_config = {0};
 
-    if (strlen(CONFIG_WIFI_MANAGER_SSID) == 0)
-    {
-        return ESP_ERR_INVALID_ARG;
-    }
-
-    if (strlen(CONFIG_WIFI_MANAGER_SSID) >=
-        sizeof(sta_config.sta.ssid))
-    {
-        return ESP_ERR_INVALID_ARG;
-    }
-
-    if (strlen(CONFIG_WIFI_MANAGER_PASSWORD) >=
-        sizeof(sta_config.sta.password))
-    {
-        return ESP_ERR_INVALID_ARG;
-    }
-
-    memcpy(
-        sta_config.sta.ssid,
-        CONFIG_WIFI_MANAGER_SSID,
-        strlen(CONFIG_WIFI_MANAGER_SSID));
-
-    memcpy(
-        sta_config.sta.password,
-        CONFIG_WIFI_MANAGER_PASSWORD,
-        strlen(CONFIG_WIFI_MANAGER_PASSWORD));
+    // Duzine su vec proverene pri upisu u NVS (storage_set_wifi).
+    memcpy(sta_config.sta.ssid, creds.ssid, strlen(creds.ssid));
+    memcpy(sta_config.sta.password, creds.password, strlen(creds.password));
 
     sta_config.sta.threshold.authmode = WIFI_AUTH_OPEN;
 
-    if (strlen(CONFIG_WIFI_MANAGER_PASSWORD) > 0)
+    if (strlen(creds.password) > 0)
     {
         sta_config.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     }

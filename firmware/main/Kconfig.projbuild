@@ -1,0 +1,122 @@
+menu "CO monitor - uredjaj"
+
+    config DEVICE_ID
+        string "ID uredjaja"
+        default "radiona1"
+        help
+            Identifikator uredjaja u MQTT temama: radiona/<id>/co, radiona/<id>/alarm ...
+
+    config MQTT_BROKER_URI
+        string "Adresa MQTT brokera"
+        default "mqtt://192.168.1.100:1883"
+        help
+            URI MQTT brokera (Mosquitto iz backend/docker). IP adresa racunara na kom radi broker.
+
+    config MQTT_TOPIC_PREFIX
+        string "Prefiks MQTT tema"
+        default "radiona"
+
+    config TIMEZONE
+        string "Vremenska zona (POSIX TZ)"
+        default "CET-1CEST,M3.5.0,M10.5.0/3"
+
+endmenu
+
+menu "CO monitor - pinovi"
+
+    config PIR_GPIO
+        int "PIR senzor - GPIO"
+        range 0 48
+        default 4
+
+    config BUZZER_GPIO
+        int "Zujalica - GPIO"
+        range 0 48
+        default 5
+
+    config BUZZER_ACTIVE_LOW
+        bool "Zujalica se ukljucuje na LOW"
+        default y
+        help
+            Modul aktivne zujalice sa vezbi pisti kada je ulaz na LOW.
+
+    config MQ7_ADC_GPIO
+        int "MQ-7 AOUT (preko delitelja) - GPIO"
+        range 1 10
+        default 1
+        help
+            Mora biti pin ADC1 (GPIO1-GPIO10 na ESP32-S3), jer ADC2 ne radi dok je WiFi ukljucen.
+
+    config MQ7_HEATER_GPIO
+        int "MQ-7 grejac (gejt MOSFET-a) - GPIO"
+        range 0 48
+        default 2
+
+endmenu
+
+menu "CO monitor - MQ-7 senzor"
+
+    config MQ7_HEATER_CYCLE
+        bool "Koristi grejni ciklus (5 V / 1,4 V)"
+        default y
+        help
+            MQ-7 po datasheet-u zahteva ciklus: 60 s grejanje na 5 V, pa 90 s merenje na 1,4 V.
+            Grejac se prebacuje PWM-om preko N-MOSFET-a. Iskljuciti ako je grejac modula
+            vezan direktno na 5 V (nemodifikovan modul) - tada se meri stalno.
+
+    config MQ7_HEAT_PHASE_S
+        int "Trajanje faze grejanja (s)"
+        depends on MQ7_HEATER_CYCLE
+        default 60
+
+    config MQ7_MEASURE_PHASE_S
+        int "Trajanje faze merenja (s)"
+        depends on MQ7_HEATER_CYCLE
+        default 90
+
+    config MQ7_SETTLE_S
+        int "Stabilizacija na pocetku faze merenja (s)"
+        depends on MQ7_HEATER_CYCLE
+        default 30
+        help
+            Ocitavanja iz prvih N sekundi faze merenja se odbacuju dok se senzor ohladi.
+
+    config MQ7_WARMUP_S
+        int "Zagrevanje posle ukljucenja (s)"
+        depends on !MQ7_HEATER_CYCLE
+        default 60
+
+    config MQ7_SAMPLE_PERIOD_MS
+        int "Period merenja (ms)"
+        default 5000
+
+    config MQ7_DIVIDER_RATIO_X1000
+        int "Odnos delitelja napona x1000 (Vout/Vadc)"
+        default 1500
+        help
+            AOUT modula ide do 5 V, a ADC podnosi ~3,1 V. Delitelj 10k (gore) / 20k (dole)
+            daje Vout = Vadc * 1,5 -> 1500.
+
+    config MQ7_RL_OHM
+        int "Otpornik opterecenja RL na modulu (ohm)"
+        default 10000
+        help
+            Na vecini modula je 10k (oznaka 103), na nekima 1k (102). Proveriti na plocici.
+
+    config MQ7_R0_OHM
+        int "R0 - otpornost senzora na 100 ppm CO (ohm)"
+        default 10000
+        help
+            Pocetna vrednost dok se senzor ne kalibrise. Cuva se u NVS-u.
+
+endmenu
+
+menu "CO monitor - alarm"
+
+    config CO_ALARM_PPM
+        int "Prag alarma (ppm)"
+        default 100
+        help
+            Pocetna vrednost praga. Cuva se u NVS-u i prezivljava restart.
+
+endmenu

@@ -4,12 +4,19 @@ menu "Wi-Fi Manager Configuration"
         string "Wi-Fi SSID"
         default ""
         help
-            Naziv Wi-Fi mreze na koju ce se ESP32 povezati.
+            Naziv Wi-Fi mreze. Koristi se samo za prvi upis u NVS - posle toga
+            uredjaj cita kredencijale iz NVS-a, pa nisu potrebni u firmveru.
 
     config WIFI_MANAGER_PASSWORD
         string "Wi-Fi Password"
         default ""
         help
-            Lozinka Wi-Fi mreze.
+            Lozinka Wi-Fi mreze. Koristi se samo za prvi upis u NVS.
+
+    config WIFI_MANAGER_OVERWRITE_NVS
+        bool "Prepisi kredencijale u NVS-u vrednostima iz menuconfig-a"
+        default n
+        help
+            Ukljuciti kada treba promeniti mrezu na uredjaju koji vec ima kredencijale u NVS-u.
 
 endmenu

@@ -1,0 +1,9 @@
+# Podrazumevana podesavanja koja se primenjuju kada sdkconfig ne postoji.
+# Ovde NE stavljati WiFi lozinku - sdkconfig se ne kaci na git, ovaj fajl se kaci.
+CONFIG_IDF_TARGET="esp32s3"
+
+# Main task stack (sa WiFi-jem podrazumevana vrednost je premala)
+CONFIG_ESP_MAIN_TASK_STACK_SIZE=8192
+
+# Firmver ne staje u podrazumevanu factory particiju
+CONFIG_PARTITION_TABLE_SINGLE_APP_LARGE=y
