@@ -40,7 +40,7 @@ FreeRTOS taskovi na uređaju:
 
 | Task | Šta radi |
 |---|---|
-| `co_task` | grejni ciklus MQ-7, merenje na svakih 5 s u fazi merenja, provera praga, uključuje zujalicu |
+| `co_task` | merenje MQ-7 na svakih 5 s (opciono uz grejni ciklus), provera praga, uključuje zujalicu |
 | `pir_task` | prima promene sa PIR prekida, šalje događaj o pokretu |
 | `telemetry_task` | prima događaje iz reda i šalje ih na MQTT |
 | `buzzer_task` | svira alarm ili kratke signale, ne blokira ostale taskove |

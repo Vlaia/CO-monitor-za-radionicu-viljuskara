@@ -58,11 +58,12 @@ menu "CO monitor - MQ-7 senzor"
 
     config MQ7_HEATER_CYCLE
         bool "Koristi grejni ciklus (5 V / 1,4 V)"
-        default y
+        default n
         help
             MQ-7 po datasheet-u zahteva ciklus: 60 s grejanje na 5 V, pa 90 s merenje na 1,4 V.
-            Grejac se prebacuje PWM-om preko N-MOSFET-a. Iskljuciti ako je grejac modula
-            vezan direktno na 5 V (nemodifikovan modul) - tada se meri stalno.
+            Na gotovim modulima (Flying-Fish "MQ Sensor", FC-22) grejac je fabricki vezan na
+            VCC, pa se senzor greje stalno i meri na svakih nekoliko sekundi (podrazumevano).
+            Ukljuciti samo ako je grejac preveden kroz N-MOSFET (vidi docs/povezivanje.md).
 
     config MQ7_HEAT_PHASE_S
         int "Trajanje faze grejanja (s)"
