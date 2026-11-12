@@ -5,7 +5,6 @@
 #include "esp_adc/adc_oneshot.h"
 #include "esp_adc/adc_cali.h"
 #include "esp_adc/adc_cali_scheme.h"
-#include "driver/ledc.h"
 #include "esp_log.h"
 #include "sdkconfig.h"
 
@@ -17,80 +16,12 @@
 #define MQ7_CURVE_A       99.042f
 #define MQ7_CURVE_B       -1.518f
 
-// PWM grejaca: 10-bitna rezolucija, 100% = 1024.
-#define HEATER_LEDC_MODE      LEDC_LOW_SPEED_MODE
-#define HEATER_LEDC_TIMER     LEDC_TIMER_0
-#define HEATER_LEDC_CHANNEL   LEDC_CHANNEL_0
-#define HEATER_LEDC_RES       LEDC_TIMER_10_BIT
-#define HEATER_LEDC_FREQ_HZ   1000
-#define HEATER_DUTY_FULL      1024
-// Efektivni napon 1,4 V od 5 V: 1024 * 1,4 / 5 = 287
-#define HEATER_DUTY_LOW       287
-
 static const char *TAG = "MQ7";
 
 static adc_oneshot_unit_handle_t adc_handle = NULL;
 static adc_cali_handle_t cali_handle = NULL;
 static adc_channel_t adc_channel;
 static float r0 = CONFIG_MQ7_R0_OHM;
-
-static esp_err_t heater_init(void)
-{
-#ifdef CONFIG_MQ7_HEATER_CYCLE
-    ledc_timer_config_t timer = {
-        .speed_mode = HEATER_LEDC_MODE,
-        .timer_num = HEATER_LEDC_TIMER,
-        .duty_resolution = HEATER_LEDC_RES,
-        .freq_hz = HEATER_LEDC_FREQ_HZ,
-        .clk_cfg = LEDC_AUTO_CLK,
-    };
-
-    esp_err_t err = ledc_timer_config(&timer);
-
-    if (err != ESP_OK) {
-        return err;
-    }
-
-    ledc_channel_config_t channel = {
-        .gpio_num = CONFIG_MQ7_HEATER_GPIO,
-        .speed_mode = HEATER_LEDC_MODE,
-        .channel = HEATER_LEDC_CHANNEL,
-        .timer_sel = HEATER_LEDC_TIMER,
-        .duty = HEATER_DUTY_FULL,
-        .hpoint = 0,
-    };
-
-    err = ledc_channel_config(&channel);
-
-    if (err == ESP_OK) {
-        ESP_LOGI(TAG, "Grejac na GPIO%d (PWM, grejni ciklus ukljucen)",
-                 CONFIG_MQ7_HEATER_GPIO);
-    }
-
-    return err;
-#else
-    ESP_LOGI(TAG, "Grejni ciklus iskljucen - grejac stalno na 5 V");
-    return ESP_OK;
-#endif
-}
-
-esp_err_t mq7_set_heater(mq7_heater_t level)
-{
-#ifdef CONFIG_MQ7_HEATER_CYCLE
-    uint32_t duty = (level == MQ7_HEATER_HIGH) ? HEATER_DUTY_FULL : HEATER_DUTY_LOW;
-
-    esp_err_t err = ledc_set_duty(HEATER_LEDC_MODE, HEATER_LEDC_CHANNEL, duty);
-
-    if (err == ESP_OK) {
-        err = ledc_update_duty(HEATER_LEDC_MODE, HEATER_LEDC_CHANNEL);
-    }
-
-    return err;
-#else
-    (void)level;
-    return ESP_OK;
-#endif
-}
 
 esp_err_t mq7_init(uint32_t r0_ohm)
 {
@@ -143,7 +74,7 @@ esp_err_t mq7_init(uint32_t r0_ohm)
     ESP_LOGI(TAG, "MQ-7 na GPIO%d (ADC1 kanal %d), R0 = %.0f ohm",
              CONFIG_MQ7_ADC_GPIO, adc_channel, (double)r0);
 
-    return heater_init();
+    return ESP_OK;
 }
 
 void mq7_set_r0(uint32_t r0_ohm)

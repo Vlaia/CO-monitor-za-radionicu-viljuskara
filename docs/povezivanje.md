@@ -17,7 +17,6 @@ Svi pinovi se mogu promeniti u `idf.py menuconfig` → **CO monitor - pinovi**. 
 | | DO | — | ne koristi se (prag se podešava u firmveru, ne potenciometrom) |
 | | GND | GND | |
 | Kondenzator 220 µF / 50 V | + / − | 5V / GND | uz VCC i GND modula; duža nožica je +, strana sa trakom je − |
-| MQ-7 grejač (samo uz modifikaciju) | gejt MOSFET-a | **GPIO2** | grejni ciklus 5 V / 1,4 V, vidi ispod |
 | E-ink 2.13" (2. faza) | SCK / MOSI / CS / DC / RST / BUSY | 12 / 11 / 10 / 9 / 8 / 7 | SPI, planirano |
 
 Napajanje: USB-C 5 V na razvojnu ploču; 5V pin ploče napaja MQ-7 i PIR.
@@ -51,30 +50,14 @@ ESP32-S3 ne podnose 5 V.
 
 Grejač nije posebna komponenta — to je spirala unutar samog senzora (ispod metalne mrežice), povezana na
 dve od šest nožica senzora. Na korišćenom modulu je fabrički vezan između VCC i GND, pa se senzor greje
-čim dobije 5 V. To je **podrazumevani režim** firmvera: grejanje je stalno, a merenje na svakih 5 s posle
-60 s zagrevanja.
+čim dobije 5 V. Firmver meri na svakih 5 s, posle 60 s zagrevanja.
+
+Datasheet MQ-7 predviđa i naizmenično grejanje (60 s na 5 V, 90 s na 1,4 V), koje daje tačnije merenje,
+ali zahteva prepravku pločice modula. Ovde se koristi stalno grejanje, koje daje približnu vrednost
+koncentracije, dovoljnu za upozorenje u radionici.
 
 Kondenzator 220 µF između 5V i GND modula (što bliže pinovima) ublažava padove napona kada grejač vuče
 struju, pa je analogno očitavanje mirnije.
-
-### Opciono: grejni ciklus iz datasheet-a
-
-Po datasheet-u MQ-7 najtačnije meri CO kada se grejač naizmenično drži 60 s na 5 V (čišćenje) i 90 s na
-1,4 V (merenje). Firmver to podržava PWM-om (100 % pa ~28 %) preko logičkog N-MOSFET-a (npr. AO3400 ili
-IRLZ44N), ali samo uz modifikaciju modula:
-
-```
-5V ── H [grejač MQ-7] H ─────── drain
-                               MOSFET
-GPIO2 ──[ 100 Ω ]──┬────────── gate
-                  [ 10 kΩ ]
-                   │
-GND ───────────────┴────────── source
-```
-
-Za to treba preseći vezu grejača ka GND na pločici, provesti je kroz MOSFET i u menuconfig-u uključiti
-**Koristi grejni ciklus**. Bez modifikacije stalno grejanje daje manje tačnu, ali za ovu namenu dovoljnu
-procenu koncentracije.
 
 ## Kalibracija
 

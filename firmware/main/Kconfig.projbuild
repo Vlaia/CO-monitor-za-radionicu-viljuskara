@@ -47,45 +47,16 @@ menu "CO monitor - pinovi"
         help
             Mora biti pin ADC1 (GPIO1-GPIO10 na ESP32-S3), jer ADC2 ne radi dok je WiFi ukljucen.
 
-    config MQ7_HEATER_GPIO
-        int "MQ-7 grejac (gejt MOSFET-a) - GPIO"
-        range 0 48
-        default 2
-
 endmenu
 
 menu "CO monitor - MQ-7 senzor"
 
-    config MQ7_HEATER_CYCLE
-        bool "Koristi grejni ciklus (5 V / 1,4 V)"
-        default n
-        help
-            MQ-7 po datasheet-u zahteva ciklus: 60 s grejanje na 5 V, pa 90 s merenje na 1,4 V.
-            Na gotovim modulima (Flying-Fish "MQ Sensor", FC-22) grejac je fabricki vezan na
-            VCC, pa se senzor greje stalno i meri na svakih nekoliko sekundi (podrazumevano).
-            Ukljuciti samo ako je grejac preveden kroz N-MOSFET (vidi docs/povezivanje.md).
-
-    config MQ7_HEAT_PHASE_S
-        int "Trajanje faze grejanja (s)"
-        depends on MQ7_HEATER_CYCLE
-        default 60
-
-    config MQ7_MEASURE_PHASE_S
-        int "Trajanje faze merenja (s)"
-        depends on MQ7_HEATER_CYCLE
-        default 90
-
-    config MQ7_SETTLE_S
-        int "Stabilizacija na pocetku faze merenja (s)"
-        depends on MQ7_HEATER_CYCLE
-        default 30
-        help
-            Ocitavanja iz prvih N sekundi faze merenja se odbacuju dok se senzor ohladi.
-
     config MQ7_WARMUP_S
         int "Zagrevanje posle ukljucenja (s)"
-        depends on !MQ7_HEATER_CYCLE
         default 60
+        help
+            Grejac modula je fabricki vezan na VCC i radi stalno; merenje pocinje
+            posle ovog vremena.
 
     config MQ7_SAMPLE_PERIOD_MS
         int "Period merenja (ms)"

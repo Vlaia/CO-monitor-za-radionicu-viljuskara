@@ -13,16 +13,7 @@ typedef struct
     float ppm;       // priblizna koncentracija CO
 } mq7_reading_t;
 
-typedef enum
-{
-    MQ7_HEATER_HIGH, // 5 V - zagrevanje / ciscenje senzora
-    MQ7_HEATER_LOW,  // ~1,4 V - faza merenja
-} mq7_heater_t;
-
 esp_err_t mq7_init(uint32_t r0_ohm);
-
-// Postavlja napon grejaca (PWM preko MOSFET-a). Bez grejnog ciklusa ne radi nista.
-esp_err_t mq7_set_heater(mq7_heater_t level);
 
 // Uprosecava nekoliko ADC odbiraka i racuna ppm.
 esp_err_t mq7_read(mq7_reading_t *out);

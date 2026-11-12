@@ -117,28 +117,7 @@ static void co_task(void *pvParameters)
 
     const TickType_t sample_period = pdMS_TO_TICKS(CONFIG_MQ7_SAMPLE_PERIOD_MS);
 
-#ifdef CONFIG_MQ7_HEATER_CYCLE
-    // Ciklus iz datasheet-a: 60 s na 5 V (cisti senzor), pa 90 s na 1,4 V kada se meri.
-    // Alarm zadrzava stanje i za vreme grejanja.
-    while (1) {
-        ESP_LOGI(TAG, "MQ-7: faza grejanja (%d s)", CONFIG_MQ7_HEAT_PHASE_S);
-        mq7_set_heater(MQ7_HEATER_HIGH);
-        vTaskDelay(pdMS_TO_TICKS(CONFIG_MQ7_HEAT_PHASE_S * 1000));
-
-        ESP_LOGI(TAG, "MQ-7: faza merenja (%d s)", CONFIG_MQ7_MEASURE_PHASE_S);
-        mq7_set_heater(MQ7_HEATER_LOW);
-
-        TickType_t phase_end = xTaskGetTickCount() +
-                               pdMS_TO_TICKS(CONFIG_MQ7_MEASURE_PHASE_S * 1000);
-
-        vTaskDelay(pdMS_TO_TICKS(CONFIG_MQ7_SETTLE_S * 1000));
-
-        while ((int32_t)(phase_end - xTaskGetTickCount()) > 0) {
-            measure_co(&logic);
-            vTaskDelay(sample_period);
-        }
-    }
-#else
+    // Grejac modula je stalno ukljucen; senzoru treba malo vremena da se zagreje.
     ESP_LOGI(TAG, "MQ-7: zagrevanje %d s", CONFIG_MQ7_WARMUP_S);
     vTaskDelay(pdMS_TO_TICKS(CONFIG_MQ7_WARMUP_S * 1000));
 
@@ -148,7 +127,6 @@ static void co_task(void *pvParameters)
         measure_co(&logic);
         vTaskDelayUntil(&last_wake, sample_period);
     }
-#endif
 }
 
 // ---------------------------------------------------------------- PIR

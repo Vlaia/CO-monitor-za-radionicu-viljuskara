@@ -19,7 +19,7 @@ firmware/   ESP-IDF projekat (ESP32-S3, FreeRTOS)
     wifi_manager/  WiFi konekcija (kredencijali iz NVS-a)
     mqtt_link/     veza sa MQTT brokerom, Last Will za status
     services/      formiranje JSON poruka za teme
-    mq7/           CO senzor: ADC, grejni ciklus, preračunavanje u ppm
+    mq7/           CO senzor: ADC sa kalibracijom, preračunavanje u ppm
     co_logic/      logika praga alarma
     pir/           PIR senzor preko prekida
     buzzer/        zujalica (alarm i kratki signali)
@@ -40,7 +40,7 @@ FreeRTOS taskovi na uređaju:
 
 | Task | Šta radi |
 |---|---|
-| `co_task` | merenje MQ-7 na svakih 5 s (opciono uz grejni ciklus), provera praga, uključuje zujalicu |
+| `co_task` | merenje MQ-7 na svakih 5 s, provera praga, uključuje zujalicu |
 | `pir_task` | prima promene sa PIR prekida, šalje događaj o pokretu |
 | `telemetry_task` | prima događaje iz reda i šalje ih na MQTT |
 | `buzzer_task` | svira alarm ili kratke signale, ne blokira ostale taskove |
