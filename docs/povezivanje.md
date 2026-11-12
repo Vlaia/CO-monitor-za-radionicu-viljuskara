@@ -26,16 +26,26 @@ Napajanje: USB-C 5 V na razvojnu ploču; 5V pin ploče napaja MQ-7 i PIR.
 
 Analogni izlaz modula ide do 5 V, a ADC ESP32-S3 meri do ~3,1 V. Zato AOUT ide preko delitelja:
 
+Delitelj se pravi od tri jednaka otpornika od 100 kΩ (jedan gore, dva redno dole):
+
 ```
-AOUT ──[ 10 kΩ ]──┬── GPIO1 (ADC1_CH0)
-                  │
-               [ 20 kΩ ]
-                  │
-                 GND
+AO ──[ 100 kΩ ]──┬── GPIO1 (ADC1_CH0)
+                 │
+              [ 100 kΩ ]
+              [ 100 kΩ ]
+                 │
+                GND
 ```
 
-Napon na pinu je 2/3 napona AOUT (5 V → 3,33 V; u praksi AOUT retko prelazi 4,5 V). Odnos delitelja
+Napon na pinu je 2/3 napona AO (5 V → 3,33 V; u praksi AO retko prelazi 4,5 V). Odnos delitelja
 je u menuconfig-u kao `MQ7_DIVIDER_RATIO_X1000 = 1500`. Koristi se ADC1 jer ADC2 ne radi dok je WiFi uključen.
+
+Otpornici treba da budu velike vrednosti (47–100 kΩ): delitelj je vezan paralelno sa otpornikom RL
+na modulu (10 kΩ), pa bi mali otpornici „pojeli“ signal. Sa 300 kΩ ukupno uticaj je oko 3 %, a i on
+se poništava kalibracijom R0. Bilo koji par u odnosu 1 : 2 radi isto (npr. 100 kΩ + 200 kΩ).
+
+AO se ne sme vezati direktno na GPIO: pri većoj koncentraciji CO napon ide preko 3,3 V, a pinovi
+ESP32-S3 ne podnose 5 V.
 
 ## Grejač MQ-7
 
