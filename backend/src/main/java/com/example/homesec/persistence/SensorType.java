@@ -3,7 +3,7 @@ package com.example.homesec.persistence;
 import java.util.Arrays;
 
 public enum SensorType {
-    DHT11(0),
+    MQ7(0),
     PIR(1);
 
     private final int value;

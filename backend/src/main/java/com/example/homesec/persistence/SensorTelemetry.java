@@ -5,6 +5,10 @@ import lombok.*;
 
 import java.time.ZonedDateTime;
 
+/**
+ * Merenja senzora. Tabela je TimescaleDB hypertable particionisana po koloni "created"
+ * (vidi TimescaleInitializer).
+ */
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -15,21 +19,22 @@ public class SensorTelemetry {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false, name = "id")
+    @Column(nullable = false, name = "id")
     private Long id;
 
-    @Column
-    private String licence;
+    @Column(name = "device_id", nullable = false)
+    private String deviceId;
 
     @Column(name = "sensor_type")
     @Enumerated(EnumType.ORDINAL)
     private SensorType sensorType;
 
-    @Column
-    private Float temperature;
+    @Column(name = "co_ppm")
+    private Float coPpm;
 
-    @Column
-    private Float humidity;
+    // Napon na izlazu MQ-7 modula, cuva se radi kasnije kalibracije.
+    @Column(name = "co_mv")
+    private Integer coMv;
 
     @Column(name = "motion_detected")
     private Boolean motionDetected;
