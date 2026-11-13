@@ -71,6 +71,31 @@ docker compose up -d
 Pokreće TimescaleDB (port 5432) i Mosquitto (port 1883). Tabele pravi backend pri prvom pokretanju,
 a `sensor_telemetry` automatski pretvara u hypertable.
 
+#### Bez Dockera (Windows)
+
+Ako Docker ne može da se pokrene, broker i baza se instaliraju direktno:
+
+1. **Mosquitto** (mosquitto.org, Windows x64 installer). Na kraj fajla
+   `C:\Program Files\mosquitto\mosquitto.conf` dodati:
+   ```
+   listener 1883 0.0.0.0
+   allow_anonymous true
+   ```
+   pa restartovati servis (PowerShell kao administrator): `Restart-Service mosquitto`.
+2. **PostgreSQL 16** (postgresql.org, Windows installer). Lozinka za korisnika `postgres`: `postgres`
+   (kao u `application.properties`), port 5432. Zatim napraviti bazu:
+   ```
+   & "C:\Program Files\PostgreSQL\16\bin\psql.exe" -U postgres -c "CREATE DATABASE iotdb"
+   ```
+3. Firewall mora da propusti port 1883 da bi se uređaj povezao (PowerShell kao administrator):
+   ```
+   New-NetFirewallRule -DisplayName "Mosquitto MQTT" -Direction Inbound -Protocol TCP -LocalPort 1883 -Action Allow -Profile Private
+   ```
+   Kućna WiFi mreža treba da bude podešena kao **Private** (Settings → Network & Internet → Wi-Fi → mreža).
+
+Bez TimescaleDB-a backend pri pokretanju samo upozori da hypertable nije napravljen; podaci se čuvaju
+u običnoj PostgreSQL tabeli i sve ostalo radi isto.
+
 ### 2. Backend
 
 Potrebna je Java 17 ili novija. Iz foldera `backend`:
